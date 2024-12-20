@@ -86,8 +86,8 @@ for i in Replicate_list.tolist():
     plt.figure(figsize=(12, 6))
 
     # Measured data
-    plt.plot(t_sampled, N_sample, 'bo', label='Prey Data I brojke it!!!')
-    plt.plot(t_sampled, P_sample, 'ro', label='Predator Data indeed')
+    plt.plot(t_sampled, N_sample, 'bo', label='Prey Data')
+    plt.plot(t_sampled, P_sample, 'ro', label='Predator Data')
 
 
     # Initial guess model
