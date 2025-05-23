@@ -48,26 +48,22 @@ def model_func(t, a, h, f):
     y0 = [np.exp(N_sample_log[0]), np.exp(P_sample_log[0])]
     solution = odeint(lotka_volterra_type_ii, y0, t, args=(r0, a, h, f, m))
     N_log, P_log = np.log(solution.T)
-    return np.concatenate([N_log, P_log])
+    return N_log, P_log
 
 # Objective function
 # Working from GUTS txt eq. 3.34
-def neg_likelihood(params, x_data, y_data): 
+def neg_likelihood(params, x_data, N_data, P_data): 
     a, h, f = params
 
     # calculate model predictions
-    Y_pred = model_func(x_data,a,h,f)
+    N_pred, P_pred = model_func(x_data,a,h,f)
 
     # need n, number of obs (half length of y since we have pred and prey for both)
-    n = len(Y_pred)//2  # double // is floor operator 
-
-    # Split y data back into N and P 
-    N_pred = Y_pred[:n]
-    P_pred = Y_pred[n:]
+    n = len(N_pred)  
 
     # need sum of squared residuals for each y variable
-    residuals_N = y_data[:n] - N_pred
-    residuals_P = y_data[n:] - P_pred
+    residuals_N = N_data - N_pred
+    residuals_P = P_data - P_pred
 
     # Have the option to specify sigma differently for the two groups 
     nll = n/2*np.log(np.sum((residuals_N) **2)) + n/2*np.log(np.sum((residuals_P) **2))
@@ -92,14 +88,11 @@ for i in Replicate_list.tolist():
     N0_log = np.log(initial_conditions.iloc[:,2].item())
     P0_log = np.log(initial_conditions.iloc[:,3].item())
 
-    # Prepare data for fitting
-    y_data = np.concatenate([N_sample_log, P_sample_log])
-
     # smooth out time that we want trajectory over 
     t = np.linspace(0, np.max(t_sampled), 1000)
 
     # Fit the parameters a, h, and f
-    result = minimize(neg_likelihood, initial_guess, args =(t_sampled, y_data), method = 'Nelder-Mead')
+    result = minimize(neg_likelihood, initial_guess, args =(t_sampled, N_sample_log, P_sample_log), method = 'Nelder-Mead')
 
     # Save best fits to output 
     a_fit, h_fit, f_fit = result.x
